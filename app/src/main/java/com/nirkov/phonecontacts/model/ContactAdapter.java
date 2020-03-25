@@ -30,10 +30,9 @@ public class ContactAdapter extends ArrayAdapter<Contact> {
 
         // Lookup view for data population and fill the text views
         ((TextView) convertView.findViewById(R.id.name)).setText(contact.getmName());
-        ((TextView) convertView.findViewById(R.id.phone)).setText(contact.getmPhoneNumber());
-
         return convertView;
     }
+
 
 
 }

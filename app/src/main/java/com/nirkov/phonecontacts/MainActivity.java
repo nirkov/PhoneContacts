@@ -16,6 +16,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.nirkov.phonecontacts.model.Contact;
 import com.nirkov.phonecontacts.model.ContactAdapter;
 
@@ -27,8 +28,12 @@ import java.util.Comparator;
 import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
-    private final int PERMISSIONS_ID_REQUEST_READ_CONTACTS = 0;
+    private final int PERMISSIONS_ID_REQUEST_READ_CONTACTS  = 0;
+    private final int PERMISSIONS_ID_REQUEST_WRITE_CONTACTS = 1;
+
     private ListView mContactsListView;
+    private FloatingActionButton mAddButton;
+
     private ArrayList<Contact> mContacts;
 
     @Override
@@ -40,15 +45,13 @@ public class MainActivity extends AppCompatActivity {
         mContacts = new ArrayList<>();
 
         // Check for permission for reading the contacts
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
-                == PackageManager.PERMISSION_GRANTED){
+        if (checkPermissions()){
             getAllContacts();
         }else {
             getPermission();
         }
-        ContactAdapter contactsAdapter = new ContactAdapter(this, mContacts);
+
         mContactsListView = (ListView) findViewById(R.id.list);
-        mContactsListView.setAdapter(contactsAdapter);
         mContactsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
@@ -56,6 +59,15 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(MainActivity.this, ContactActivity.class);
                 intent.putExtra("name", contact.getmName());
                 intent.putExtra("phone", contact.getmPhoneNumber());
+                startActivity(intent);
+            }
+        });
+
+        mAddButton = findViewById(R.id.add_fab);
+        mAddButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, AddContactActivity.class);
                 startActivity(intent);
             }
         });
@@ -69,20 +81,28 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.READ_CONTACTS},
                     PERMISSIONS_ID_REQUEST_READ_CONTACTS);
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_CONTACTS},
+                    PERMISSIONS_ID_REQUEST_WRITE_CONTACTS);
         }
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int      requestCode,
+                                           String[] permissions,
+                                           int[]    grantResults) {
         switch (requestCode) {
             case PERMISSIONS_ID_REQUEST_READ_CONTACTS: {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     getAllContacts();
-                } else {
-                    // TODO: ADD MESSAGE TO THE USER SCREEN
+                    ContactAdapter contactsAdapter = new ContactAdapter(this, mContacts);
+                    mContactsListView.setAdapter(contactsAdapter);
                 }
+                return;
+            }
+            case PERMISSIONS_ID_REQUEST_WRITE_CONTACTS: {
                 return;
             }
         }
@@ -122,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
                     while (phoneNumberCursor.moveToNext()) {
                         phoneNumber = phoneNumberCursor.getString(phoneNumberCursor.getColumnIndex(
                                 ContactsContract.CommonDataKinds.Phone.NUMBER));
-
+                        break;
                     }
                     phoneNumberCursor.close();
                 }
@@ -136,6 +156,13 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    private boolean checkPermissions(){
+        return (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
+                == PackageManager.PERMISSION_GRANTED) &&
+                (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS)
+                        == PackageManager.PERMISSION_GRANTED);
     }
 
 
