@@ -5,7 +5,9 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -15,6 +17,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.nirkov.phonecontacts.model.Contact;
@@ -25,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
@@ -44,13 +48,6 @@ public class MainActivity extends AppCompatActivity {
         // Initialize fields
         mContacts = new ArrayList<>();
 
-        // Check for permission for reading the contacts
-        if (checkPermissions()){
-            getAllContacts();
-        }else {
-            getPermission();
-        }
-
         mContactsListView = (ListView) findViewById(R.id.list);
         mContactsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -62,6 +59,15 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        // Check for permission for reading the contacts
+        if (checkPermissions()){
+            getAllContacts();
+            ContactAdapter contactsAdapter = new ContactAdapter(this, mContacts);
+            mContactsListView.setAdapter(contactsAdapter);
+        }else {
+            getPermission();
+        }
 
         mAddButton = findViewById(R.id.add_fab);
         mAddButton.setOnClickListener(new View.OnClickListener() {
@@ -78,13 +84,15 @@ public class MainActivity extends AppCompatActivity {
         if(ActivityCompat.shouldShowRequestPermissionRationale(this,
                     Manifest.permission.READ_CONTACTS)) {
         } else {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_CONTACTS},
-                    PERMISSIONS_ID_REQUEST_READ_CONTACTS);
+            // The permission we need for edit contacts list on phone
+            List<String> permissionsNeeded = new ArrayList<>();
+            permissionsNeeded.add(Manifest.permission.READ_CONTACTS);
+            permissionsNeeded.add(Manifest.permission.WRITE_CONTACTS);
 
+            // Send permissions request
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.WRITE_CONTACTS},
-                    PERMISSIONS_ID_REQUEST_WRITE_CONTACTS);
+                    permissionsNeeded.toArray(new String[permissionsNeeded.size()]),
+                    PERMISSIONS_ID_REQUEST_READ_CONTACTS);
         }
     }
 
@@ -94,15 +102,16 @@ public class MainActivity extends AppCompatActivity {
                                            int[]    grantResults) {
         switch (requestCode) {
             case PERMISSIONS_ID_REQUEST_READ_CONTACTS: {
+                Context context = getApplicationContext();
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(context, "Permission Received", Toast.LENGTH_SHORT).show();
                     getAllContacts();
                     ContactAdapter contactsAdapter = new ContactAdapter(this, mContacts);
                     mContactsListView.setAdapter(contactsAdapter);
+                }else{
+                    Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show();
                 }
-                return;
-            }
-            case PERMISSIONS_ID_REQUEST_WRITE_CONTACTS: {
                 return;
             }
         }
