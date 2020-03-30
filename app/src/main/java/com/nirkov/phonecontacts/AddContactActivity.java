@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
 import android.content.ContentProviderOperation;
+import android.content.Intent;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.view.View;
@@ -61,6 +62,11 @@ public class AddContactActivity extends AppCompatActivity {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra("name", mName.getText().toString());
+                resultIntent.putExtra("phone", mPhoneNumber.getText().toString());
+                setResult(1, resultIntent);
                 finish();
             }
         });

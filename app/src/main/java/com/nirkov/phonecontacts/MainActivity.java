@@ -1,5 +1,6 @@
 package com.nirkov.phonecontacts;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -17,6 +18,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -33,7 +35,7 @@ import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
     private final int PERMISSIONS_ID_REQUEST_READ_CONTACTS  = 0;
-    private final int PERMISSIONS_ID_REQUEST_WRITE_CONTACTS = 1;
+    private final int ADD_NEW_CONTACT = 1;
 
     private ListView mContactsListView;
     private FloatingActionButton mAddButton;
@@ -74,11 +76,52 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, AddContactActivity.class);
-                startActivity(intent);
+                startActivityForResult(intent, ADD_NEW_CONTACT);
+
             }
         });
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        switch (requestCode){
+            case ADD_NEW_CONTACT : {
+                if(resultCode == requestCode){
+                    final String name = data.getStringExtra("name").toString();
+                    final String phone = data.getStringExtra("phone").toString();
+                    final int index = binarySearchOnSortedArray(mContacts, name);
+                    mContacts.add(index, new Contact(String.valueOf(index), name, phone));
+                    mContactsListView.invalidate();
+                }
+            }
+
+        }
+    }
+
+    private int binarySearchOnSortedArray(ArrayList<Contact> contacts, String  newName){
+        if(contacts == null || contacts.isEmpty()) return 0;
+        int start  = 0;
+        int end    = contacts.size() - 1;
+        int middle = 0;
+        int compareResult;
+        while(start <= end){
+            middle = (start + end) / 2;
+            compareResult = contacts.get(middle).getmName().compareTo(newName);
+            if(compareResult == 0){
+                break;
+            }else{
+                if(compareResult < 0){
+                    start = middle + 1;
+                }else{
+                    end = middle - 1;
+                }
+            }
+        }
+        if(contacts.get(middle).getmName().compareTo(newName) < 0 && middle <= contacts.size()) {
+            middle ++;
+        }
+        return middle;
+    }
 
     private void getPermission() {
         if(ActivityCompat.shouldShowRequestPermissionRationale(this,
@@ -133,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
         if(cursor != null && cursor.getCount() > 0){
             String phoneNumber = "";
             String contacID = "";
-            String contactName;
+            String contactName = "";
             Cursor phoneNumberCursor;
             while (cursor != null && cursor.moveToNext()) {
                 // Get contact name
@@ -151,13 +194,15 @@ public class MainActivity extends AppCompatActivity {
                     while (phoneNumberCursor.moveToNext()) {
                         phoneNumber = phoneNumberCursor.getString(phoneNumberCursor.getColumnIndex(
                                 ContactsContract.CommonDataKinds.Phone.NUMBER));
-                        break;
                     }
                     phoneNumberCursor.close();
                 }
-                mContacts.add(new Contact(contacID, contactName, phoneNumber));
+                if(contactName != null){
+                    mContacts.add(new Contact(contacID, contactName, phoneNumber));
+                }
             }
             if (cursor != null) cursor.close();
+
             Collections.sort(mContacts, new Comparator<Contact>() {
                 @Override
                 public int compare(Contact thisContact, Contact other) {
