@@ -8,12 +8,14 @@
 
     <TextView
         android:id="@+id/contact_name"
-        android:layout_width="255dp"
-        android:layout_height="34dp"
+        android:layout_width="287dp"
+        android:layout_height="33dp"
         android:layout_marginStart="20dp"
         android:layout_marginTop="32dp"
-        android:text="Name:"
+        android:text="Name"
         android:textSize="24sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -34,14 +36,17 @@
 
 
     <!--Password : text view and text box-->
+
     <TextView
         android:id="@+id/contact_phone"
         android:layout_width="133dp"
         android:layout_height="31dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:text="Phone Number:"
+        android:text="Phone Number"
         android:textSize="24sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.015"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/contact_name_box" />
 
@@ -68,7 +73,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:text=""
+        android:text="Add"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/contact_phone_box" />

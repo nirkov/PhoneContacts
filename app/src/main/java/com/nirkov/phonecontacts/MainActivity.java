@@ -6,7 +6,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
-import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -16,22 +15,17 @@ import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Switch;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.nirkov.phonecontacts.model.Contact;
 import com.nirkov.phonecontacts.model.ContactAdapter;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
     private final int PERMISSIONS_ID_REQUEST_READ_CONTACTS  = 0;
@@ -48,21 +42,21 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Initialize fields
-        mContacts = new ArrayList<>();
-
+        mContacts         = new ArrayList<>();
         mContactsListView = (ListView) findViewById(R.id.list);
         mContactsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
                 Contact contact = (Contact)adapterView.getItemAtPosition(position);
-                Intent intent = new Intent(MainActivity.this, ContactActivity.class);
+                Intent intent;
+                intent = new Intent(MainActivity.this, ContactActivity.class);
                 intent.putExtra("name", contact.getmName());
                 intent.putExtra("phone", contact.getmPhoneNumber());
                 startActivity(intent);
             }
         });
 
-        // Check for permission for reading the contacts
+        // Check for permission for reading the contacts and insert new contact
         if (checkPermissions()){
             getAllContacts();
             ContactAdapter contactsAdapter = new ContactAdapter(this, mContacts);
@@ -86,6 +80,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         switch (requestCode){
             case ADD_NEW_CONTACT : {
+                // In case we succeeded to add new contact to phone contact list, we need to create
+                // new Contact object and add it to the mContact list
                 if(resultCode == requestCode){
                     final String name = data.getStringExtra("name").toString();
                     final String phone = data.getStringExtra("phone").toString();
@@ -98,7 +94,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private int binarySearchOnSortedArray(ArrayList<Contact> contacts, String  newName){
+    /**
+     * Return the index where we need to insert the new item (to <contacts>)
+     * @param contacts
+     * @param newName
+     * @return
+     */
+    private int binarySearchOnSortedArray(ArrayList<Contact> contacts, String newName){
         if(contacts == null || contacts.isEmpty()) return 0;
         int start  = 0;
         int end    = contacts.size() - 1;
@@ -123,6 +125,9 @@ public class MainActivity extends AppCompatActivity {
         return middle;
     }
 
+    /**
+     * Ask for permission to read data of contact and insert new contact from the device
+     */
     private void getPermission() {
         if(ActivityCompat.shouldShowRequestPermissionRationale(this,
                     Manifest.permission.READ_CONTACTS)) {
@@ -139,6 +144,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Chacke the permission type that return to this function. in this case we are waiting to
+     * only one permission - read and insert new contact to the phone.
+     * @param requestCode
+     * @param permissions
+     * @param grantResults
+     */
     @Override
     public void onRequestPermissionsResult(int      requestCode,
                                            String[] permissions,
@@ -149,7 +161,12 @@ public class MainActivity extends AppCompatActivity {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Toast.makeText(context, "Permission Received", Toast.LENGTH_SHORT).show();
+
+                    // Read all phone contact and insert them to mContacts list
                     getAllContacts();
+
+                    // Create new contact adapter that will make adaptation between the list view
+                    // and the item we want to insert to it - item_contact.xml
                     ContactAdapter contactsAdapter = new ContactAdapter(this, mContacts);
                     mContactsListView.setAdapter(contactsAdapter);
                 }else{
@@ -212,12 +229,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Check for permission to read contacts data and insert new contacts to the device
+     * @return <boolean>
+     */
     private boolean checkPermissions(){
         return (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
                 == PackageManager.PERMISSION_GRANTED) &&
                 (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS)
                         == PackageManager.PERMISSION_GRANTED);
     }
-
-
 }

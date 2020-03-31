@@ -2,7 +2,6 @@ package com.nirkov.phonecontacts;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.Activity;
 import android.content.ContentProviderOperation;
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,9 +9,10 @@ import android.provider.ContactsContract;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class AddContactActivity extends AppCompatActivity {
     private Button mAddButton;
@@ -27,9 +27,16 @@ public class AddContactActivity extends AppCompatActivity {
         mName        = (EditText) findViewById(R.id.contact_name_box);
         mAddButton   = (Button)   findViewById(R.id.add_contact_button);
 
+        // In case the language of the phone isn't english
+        if(!Locale.getDefault().getDisplayLanguage().equalsIgnoreCase("english")){
+            ((TextView) findViewById(R.id.contact_name)).setText("שם");
+            ((TextView) findViewById(R.id.contact_phone)).setText("מספר טלפון");
+            mAddButton.setText("הוסף");
+        }
+
         mAddButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            // Add new contact to list
+            // Add new contact to list - create it as ContentProviderOperation array of operation
             public void onClick(View view) {
                 try {
                     ArrayList<ContentProviderOperation> ops = new ArrayList<>();
